@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Company Profile Bar -->
+<div class="card card-agri bg-white p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h4 class="fw-bold text-primary mb-1"><i class="bi bi-building-check me-2"></i>Company Portal: {{ company.company_name }}</h4>
+            <div class="text-muted small d-flex flex-wrap gap-3">
+                <span><strong>Business Type:</strong> {{ company.business_type }}</span>
+                <span><strong>GST Number:</strong> {{ company.gst_number }}</span>
+                <span><strong>Email:</strong> {{ company.email }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Negotiations & Deals Section -->
+<div class="card card-agri bg-white p-4 mb-4">
+    <h5 class="fw-bold mb-3"><i class="bi bi-briefcase-fill text-primary me-2"></i>My Offers, Negotiations & Checkout</h5>
+    {% if my_offers %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Produce & Farmer</th>
+                        <th>Requested Qty</th>
+                        <th>Current Quote/kg</th>
+                        <th>Total Deal Value</th>
+                        <th>Status</th>
+                        <th>Action / Negotiation Loop</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for offer in my_offers %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">{{ offer.ad.crop_name }}</div>
+                            <div class="small text-muted">Farmer: {{ offer.ad.farmer.name }} ({{ offer.ad.farmer.land_place }})</div>
+                        </td>
+                        <td>{{ offer.requested_quantity }} kg</td>
+                        <td>
+                            <span class="fw-bold text-dark">₹{{ offer.quote_price }}/kg</span>
+                            {% if offer.last_hike_amount > 0 %}
+                                <div class="small text-danger">Farmer added +₹{{ offer.last_hike_amount }}/kg hike</div>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-success">₹{{ offer.total_amount }}</td>
+                        <td>
+                            {% if offer.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark">Sent to Farmer</span>
+                            {% elif offer.status == 'Countered' %}
+                                <span class="badge bg-info text-dark">Farmer Raised Price (+₹{{ offer.last_hike_amount }}/kg)</span>
+                            {% elif offer.status == 'Accepted' %}
+                                <span class="badge bg-success">Deal Locked! Ready for Payment</span>
+                            {% elif offer.status == 'Paid' %}
+                                <span class="badge bg-primary">Paid</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ offer.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="min-width: 290px;">
+                            {% if offer.status == 'Accepted' %}
+                                <a href="{{ url_for('payment_gateway', offer_id=offer.id) }}" class="btn btn-success btn-sm w-100 fw-semibold">
+                                    <i class="bi bi-credit-card me-1"></i>Open Payment Gateway (₹{{ offer.total_amount }})
+                                </a>
+                            {% elif offer.status == 'Paid' %}
+                                <a href="{{ url_for('payment_gateway', offer_id=offer.id) }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="bi bi-receipt me-1"></i>View Payment Receipt
+                                </a>
+                            {% elif offer.turn == 'company' and offer.status == 'Countered' %}
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex gap-1">
+                                        <form method="POST" action="{{ url_for('company_respond_offer', offer_id=offer.id) }}" class="flex-grow-1">
+                                            <input type="hidden" name="decision" value="accept_hike">
+                                            <button type="submit" class="btn btn-sm btn-success w-100">
+                                                Accept ₹{{ offer.quote_price }}/kg
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('company_respond_offer', offer_id=offer.id) }}">
+                                            <input type="hidden" name="decision" value="decline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Withdraw</button>
+                                        </form>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('company_respond_offer', offer_id=offer.id) }}" class="d-flex gap-1">
+                                        <input type="hidden" name="decision" value="counter">
+                                        <input type="number" step="0.01" name="new_quote_price" class="form-control form-control-sm" placeholder="New Quote ₹/kg" required>
+                                        <button type="submit" class="btn btn-sm btn-primary text-nowrap">Send Quote</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <span class="text-muted small">
+                                    {% if offer.status == 'No Negotiation' %}
+                                        Closed (No Negotiation)
+                                    {% else %}
+                                        Waiting for Farmer's response...
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted mb-0">You have not placed any offers yet. Browse the marketplace below to make an offer.</p>
+    {% endif %}
+</div>
+
+<!-- Marketplace Produce Listings -->
+<h5 class="fw-bold mb-3"><i class="bi bi-shop text-success me-2"></i>Available Farmer Produce Ads</h5>
+<div class="row g-4">
+    {% for ad in ads %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-agri bg-white h-100 p-3 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold mb-0">{{ ad.crop_name }}</h5>
+                        {% if ad.status == 'Available' %}
+                            <span class="badge badge-available">Available</span>
+                        {% else %}
+                            <span class="badge badge-soldout">Sold Out</span>
+                        {% endif %}
+                    </div>
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-person-fill me-1"></i>Farmer: <strong>{{ ad.farmer.name }}</strong>
+                        ({{ ad.farmer.land_place }} • {{ ad.farmer.land_size }})
+                    </p>
+
+                    <ul class="list-group list-group-flush small mb-3">
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span>Date of Harvest:</span>
+                            <strong>{{ ad.harvest_date }}</strong>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span>Available Quantity:</span>
+                            <strong class="text-success">{{ ad.total_quantity }} kg</strong>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span>Minimum Buying Qty:</span>
+                            <strong>{{ ad.min_buying_quantity }} kg</strong>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span>Farmer Base Price:</span>
+                            <strong class="fs-6 text-dark">₹{{ ad.price_per_kg }} / kg</strong>
+                        </li>
+                    </ul>
+
+                    <a href="{{ url_for('static', filename='uploads/certificates/' ~ ad.certificate_filename) }}"
+                       target="_blank" class="btn btn-sm btn-outline-success w-100 mb-3">
+                        <i class="bi bi-patch-check-fill me-1"></i>View Quality Check Certificate
+                    </a>
+                </div>
+
+                <!-- Company Quote & Quantity Section inside each Ad -->
+                {% if ad.status == 'Available' and ad.total_quantity > 0 %}
+                    <div class="offer-box p-3">
+                        <div class="fw-semibold small text-success mb-2">
+                            <i class="bi bi-tag-fill me-1"></i>Buy / Send Price Quote to Farmer
+                        </div>
+                        <form method="POST" action="{{ url_for('company_ad_offer' if false else 'create_offer', ad_id=ad.id) }}">
+                            <div class="mb-2">
+                                <label class="form-label small mb-1">Quantity Requirement (kg)</label>
+                                <input type="number" step="0.01" name="requested_quantity"
+                                       min="{{ ad.min_buying_quantity }}" max="{{ ad.total_quantity }}"
+                                       class="form-control form-control-sm"
+                                       placeholder="Min {{ ad.min_buying_quantity }} kg" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small mb-1">Your Quote Price (₹ per kg)</label>
+                                <input type="number" step="0.01" name="quote_price"
+                                       class="form-control form-control-sm"
+                                       placeholder="Farmer asks ₹{{ ad.price_per_kg }}/kg" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold">
+                                Send Offer Request
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger py-2 text-center small mb-0 fw-semibold">
+                        Produce Lot Sold Out
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-light border text-center py-4">
+                No produce advertisements have been posted yet.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="payment-shell">
+    <div class="card card-agri bg-white p-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+            <div>
+                <span class="badge bg-dark mb-1">DEMO HTML PAYMENT GATEWAY</span>
+                <h4 class="fw-bold mb-0">AgriPay Secure B2B Checkout</h4>
+            </div>
+            <div class="text-end">
+                <div class="small text-muted">Order Ref #OFFER-{{ offer.id }}</div>
+                <div class="fs-4 fw-bold text-success">₹{{ offer.total_amount }}</div>
+            </div>
+        </div>
+
+        <!-- Deal Summary -->
+        <div class="bg-light rounded p-3 mb-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-2">Locked Deal Summary</h6>
+            <div class="row small g-2">
+                <div class="col-sm-6"><strong>Produce:</strong> {{ offer.ad.crop_name }}</div>
+                <div class="col-sm-6"><strong>Farmer:</strong> {{ offer.ad.farmer.name }} ({{ offer.ad.farmer.land_place }})</div>
+                <div class="col-sm-6"><strong>Buyer Company:</strong> {{ offer.company.company_name }} (GST: {{ offer.company.gst_number }})</div>
+                <div class="col-sm-6"><strong>Quantity Locked:</strong> {{ offer.requested_quantity }} kg</div>
+                <div class="col-sm-6"><strong>Agreed Price per kg:</strong> ₹{{ offer.quote_price }}/kg</div>
+                <div class="col-sm-6"><strong>Total Payable:</strong> <span class="text-success fw-bold">₹{{ offer.total_amount }}</span></div>
+            </div>
+        </div>
+
+        {% if offer.status == 'Paid' %}
+            <div class="alert alert-success text-center p-4">
+                <i class="bi bi-check-circle-fill display-5 d-block mb-2"></i>
+                <h4 class="fw-bold">Payment Confirmed (Demo Mode)</h4>
+                <p class="mb-3">
+                     ₹{{ offer.total_amount }} has been recorded as paid to Farmer <strong>{{ offer.ad.farmer.name }}</strong>
+                    for {{ offer.requested_quantity }} kg of {{ offer.ad.crop_name }}.
+                </p>
+                <a href="{{ url_for('company_dashboard') }}" class="btn btn-success">
+                    <i class="bi bi-arrow-left me-1"></i>Return to Company Dashboard
+                </a>
+            </div>
+        {% else %}
+            <!-- Non-functional Static HTML Payment Options -->
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#upi-tab" type="button">
+                        <i class="bi bi-qr-code-scan me-1"></i>UPI / QR
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#card-tab" type="button">
+                        <i class="bi bi-credit-card me-1"></i>Corporate Card
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#netbanking-tab" type="button">
+                        <i class="bi bi-bank me-1"></i>NEFT / Net Banking
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content border rounded p-3 mb-4">
+                <div class="tab-pane fade show active" id="upi-tab">
+                    <label class="form-label small fw-semibold">Enter Business UPI ID (Static Demo Field)</label>
+                    <input type="text" class="form-control" placeholder="companyname@okaxis">
+                </div>
+                <div class="tab-pane fade" id="card-tab">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Card Number (Static Demo Field)</label>
+                        <input type="text" class="form-control" placeholder="4532 •••• •••• 8891">
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <input type="text" class="form-control" placeholder="MM/YY">
+                        </div>
+                        <div class="col-6">
+                            <input type="password" class="form-control" placeholder="CVV">
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="netbanking-tab">
+                    <label class="form-label small fw-semibold">Select Corporate Bank</label>
+                    <select class="form-select">
+                        <option>State Bank of India — Corporate</option>
+                        <option>HDFC Bank — Business</option>
+                        <option>ICICI Bank — CIB</option>
+                        <option>Axis Bank — Corporate</option>
+                    </select>
+                </div>
+            </div>
+
+            <form method="POST">
+                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">
+                    Simulate Payment of ₹{{ offer.total_amount }}
+                </button>
+            </form>
+            <div class="text-center mt-3">
+                <a href="{{ url_for('company_dashboard') }}" class="text-muted small">Back to Company Dashboard</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

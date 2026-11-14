@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite Database and instance folders
+instance/
+*.db
+*.sqlite3
+
+# Uploaded test certificates (keep directory via .gitkeep)
+static/uploads/certificates/*
+!static/uploads/certificates/.gitkeep
+
+# Environments
+.env
+venv/
+.venv/
+env/
+ENV/
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating System Files
+.DS_Store
+Thumbs.db
