@@ -25,6 +25,10 @@ ENV/
 *.swp
 *.swo
 
+# Local backup subfolder
+agriconnect/
+temp_clone/
+
 # Operating System Files
 .DS_Store
 Thumbs.db
